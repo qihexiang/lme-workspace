@@ -1,0 +1,48 @@
+use std::{collections::HashSet, sync::Arc};
+
+use n_to_n::NtoN;
+
+use crate::entity::{Layer, Molecule};
+
+#[derive(Debug, Default, Clone)]
+pub struct Stack {
+    current: Arc<Layer>,
+    classes: NtoN<String, usize>,
+    cache: Molecule,
+    base: Option<Arc<Stack>>,
+}
+
+impl Stack {
+    pub fn new(current: Arc<Layer>, classes: NtoN<String, usize>, base: Arc<Stack>) -> Self {
+        let cache = current.read(&base.cache);
+        Self {
+            current,
+            classes,
+            cache,
+            base: Some(base),
+        }
+    }
+
+    pub fn get_classes(&self, workspace_classes: &NtoN<String, usize>) -> NtoN<String, usize> {
+        let mut classes = self.classes.clone();
+        if let Some(base) = &self.base {
+            let base: HashSet<_> = base.get_classes(workspace_classes).into();
+            classes.extend(base);
+        }
+        let workspace: HashSet<_> = workspace_classes.clone().into();
+        classes.extend(workspace);
+        classes
+    }
+
+    pub fn read(&self) -> &Molecule {
+        &self.cache
+    }
+
+    pub fn get_base(&self) -> Option<Arc<Self>> {
+        self.base.clone()
+    }
+
+    pub fn get_layer(&self) -> Arc<Layer> {
+        self.current.clone()
+    }
+}

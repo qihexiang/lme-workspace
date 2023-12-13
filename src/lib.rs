@@ -3,26 +3,17 @@ use std::sync::Arc;
 use n_to_n::NtoN;
 
 pub mod entity;
+pub mod stack;
 pub mod config;
 
-pub struct Stack;
-
-pub enum Layer {
-    Base(usize),
-    Fill,
-    Translation,
-    Rotation,
-    Plugin,
-    ReplaceElement,
-    HideElement,
-    HideBonds,
-}
+use entity::Layer;
+use stack::Stack;
 
 pub struct Workspace {
     stacks: Vec<Arc<Stack>>,
     layers: Vec<Arc<Layer>>,
     ids: Vec<Option<String>>,
-    classes: NtoN<usize, String>
+    classes: NtoN<String, usize>
 }
 
 mod test {
