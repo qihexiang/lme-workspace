@@ -3,7 +3,8 @@ use std::hash::Hash;
 
 use rayon::prelude::*;
 
-pub struct NtoN<L, R>(HashSet<(L, R)>);
+#[derive(Debug, Default, Clone)]
+pub struct NtoN<L: Eq + Hash, R: Eq + Hash>(HashSet<(L, R)>);
 
 impl<L: Sync + Send + Eq + Hash + Clone, R: Sync + Send + Eq + Hash + Clone> NtoN<L, R> {
     pub fn new() -> Self {
@@ -66,14 +67,14 @@ impl<L: Sync + Send + Eq + Hash + Clone, R: Sync + Send + Eq + Hash + Clone> Nto
     }
 }
 
-impl<K, V> From<HashSet<(K, V)>> for NtoN<K, V> {
-    fn from(value: HashSet<(K, V)>) -> Self {
+impl<L: Eq + Hash, R: Eq + Hash> From<HashSet<(L, R)>> for NtoN<L, R> {
+    fn from(value: HashSet<(L, R)>) -> Self {
         Self(value)
     }
 }
 
-impl<K, V> Into<HashSet<(K, V)>> for NtoN<K, V> {
-    fn into(self) -> HashSet<(K, V)> {
+impl<L: Eq + Hash, R: Eq + Hash> Into<HashSet<(L, R)>> for NtoN<L, R> {
+    fn into(self) -> HashSet<(L, R)> {
         self.0
     }
 }
