@@ -57,6 +57,13 @@ impl<L: Sync + Send + Eq + Hash + Clone, R: Sync + Send + Eq + Hash + Clone> Nto
     pub fn remove_right(&mut self, right: &R) {
         self.data_mut().retain(|(_, r)| r != right)
     }
+
+    pub fn extend<I>(&mut self, iter: I)
+    where
+        I: IntoIterator<Item = (L, R)>,
+    {
+        self.data_mut().extend(iter)
+    }
 }
 
 impl<K, V> From<HashSet<(K, V)>> for NtoN<K, V> {
