@@ -4,16 +4,25 @@ use n_to_n::NtoN;
 
 use crate::entity::{Layer, Molecule};
 
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Clone)]
 pub struct Stack {
-    current: Arc<Layer>,
+    current: Layer,
     classes: NtoN<String, usize>,
     cache: Molecule,
     base: Option<Arc<Stack>>,
 }
 
 impl Stack {
-    pub fn new(current: Arc<Layer>, classes: NtoN<String, usize>, base: Arc<Stack>) -> Self {
+    pub fn new_empty(core_size: usize) -> Self {
+        Self {
+            current: Layer::Base(core_size),
+            classes: NtoN::default(),
+            cache: Molecule::default(),
+            base: Option::default(),
+        }
+    }
+
+    pub fn new(current: Layer, classes: NtoN<String, usize>, base: Arc<Stack>) -> Self {
         let cache = current.read(&base.cache);
         Self {
             current,
@@ -42,7 +51,7 @@ impl Stack {
         self.base.clone()
     }
 
-    pub fn get_layer(&self) -> Arc<Layer> {
+    pub fn get_layer(&self) -> Layer {
         self.current.clone()
     }
 }
