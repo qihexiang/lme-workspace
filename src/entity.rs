@@ -88,7 +88,7 @@ impl Atoms {
         })
     }
 
-    pub fn overlay(&self, lower: &Self) -> Self {
+    pub fn overlay_to(&self, lower: &Self) -> Self {
         let mut merged = lower.data().clone();
         merged.extend(self.data());
         Self(merged)
@@ -149,7 +149,7 @@ impl Bonds {
         self.set_bonds(&bonds)
     }
 
-    pub fn overlay(&self, lower: &Self) -> Self {
+    pub fn overlay_to(&self, lower: &Self) -> Self {
         let mut graph = lower.data().clone();
         graph.extend(self.data().all_edges());
         Self(graph)
@@ -164,7 +164,7 @@ fn merge_bonds() {
     middle.set_bonds(&vec![(3, 4, Some(1.0)), (4, 5, Some(3.0))]);
     let mut upper = Bonds::new();
     upper.set_bonds(&vec![(0, 1, None), (3, 4, None), (0, 4, Some(1.0))]);
-    let merged = upper.overlay(&middle.overlay(&lower));
+    let merged = upper.overlay_to(&middle.overlay_to(&lower));
     for (a, b, bond) in merged.data().all_edges() {
         println!("{} {} {:?}", a, b, bond);
     }
@@ -178,10 +178,10 @@ pub struct Molecule {
 }
 
 impl Molecule {
-    pub fn overlay(&self, Molecule { atoms, bonds }: &Molecule) -> Molecule {
+    pub fn overlay_to(&self, Molecule { atoms, bonds }: &Molecule) -> Molecule {
         let mut molecule = self.clone();
-        molecule.atoms.overlay(atoms);
-        molecule.bonds.overlay(bonds);
+        molecule.atoms = molecule.atoms.overlay_to(atoms);
+        molecule.bonds = molecule.bonds.overlay_to(bonds);
         molecule
     }
 }
@@ -198,6 +198,12 @@ pub enum Layer {
     },
 }
 
+impl Default for Layer {
+    fn default() -> Self {
+        Self::Base(0)
+    }
+}
+
 impl Layer {
     pub fn read(&self, lower: &Molecule) -> Molecule {
         match self {
@@ -207,7 +213,7 @@ impl Layer {
                 molecule.atoms.set(&placeholders);
                 molecule
             }
-            Self::Fill(current) => current.overlay(lower),
+            Self::Fill(current) => current.overlay_to(lower),
             Self::HideBonds => {
                 let mut molecule = lower.clone();
                 molecule.bonds = Bonds::new();
