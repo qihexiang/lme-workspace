@@ -1,5 +1,10 @@
-use std::{collections::HashMap, process::{Command, Stdio}, io::Write};
+use std::{
+    collections::HashMap,
+    io::Write,
+    process::{Command, Stdio},
+};
 
+use n_to_n::NtoN;
 use nalgebra::{Point3, Transform3};
 use petgraph::graphmap::UnGraphMap;
 use rayon::iter::{
@@ -175,13 +180,22 @@ fn merge_bonds() {
 pub struct Molecule {
     atoms: Atoms,
     bonds: Bonds,
+    pub classes: NtoN<String, usize>,
 }
 
 impl Molecule {
-    pub fn overlay_to(&self, Molecule { atoms, bonds }: &Molecule) -> Molecule {
+    pub fn overlay_to(
+        &self,
+        Molecule {
+            atoms,
+            bonds,
+            classes,
+        }: &Molecule,
+    ) -> Molecule {
         let mut molecule = self.clone();
         molecule.atoms = molecule.atoms.overlay_to(atoms);
         molecule.bonds = molecule.bonds.overlay_to(bonds);
+        molecule.classes = molecule.classes.overlay_to(classes);
         molecule
     }
 }
@@ -211,6 +225,7 @@ impl Layer {
                 let mut molecule = Molecule::default();
                 let placeholders = (0..*size).map(|idx| (idx, None)).collect::<Vec<_>>();
                 molecule.atoms.set(&placeholders);
+                molecule.classes.extend((0..*size).map(|idx| (String::from("core"), idx)));
                 molecule
             }
             Self::Fill(current) => current.overlay_to(lower),
@@ -232,11 +247,13 @@ impl Layer {
                     .spawn()
                     .unwrap();
                 let mut stdin = process.stdin.take().unwrap();
-                stdin.write_all(serde_json::to_string(lower).unwrap().as_bytes()).unwrap();
+                stdin
+                    .write_all(serde_json::to_string(lower).unwrap().as_bytes())
+                    .unwrap();
                 let result = process.wait_with_output().unwrap();
                 let molecule: Molecule = serde_json::from_slice(&result.stdout).unwrap();
                 molecule
-            },
+            }
         }
     }
 }

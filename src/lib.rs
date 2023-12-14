@@ -61,6 +61,25 @@ impl Workspace {
         }
     }
 
+    pub fn write_to_stack(
+        &mut self,
+        stack_idx: usize,
+        patch: &Molecule,
+    ) -> Result<(), WorkspaceError> {
+        if let Some(stack) = self.stacks.get_mut(stack_idx) {
+            if let Layer::Fill(molecule) = stack.get_layer() {
+                let molecule = patch.overlay_to(molecule);
+                let layer = Layer::Fill(molecule);
+                // *stack = Arc::new(Stack::new(layer, stack, base))
+            } else {
+                *stack = Arc::new(Stack::new(Layer::Fill(patch.clone()), stack.clone()));
+            }
+            Ok(())
+        } else {
+            Err(WorkspaceError::StackNotFound)
+        }
+    }
+
     pub fn remove_stack(&mut self, stack_idx: usize) -> Result<Arc<Stack>, WorkspaceError> {
         if let Ok(stack) = self.read_stack(stack_idx) {
             self.stacks.remove(stack_idx);
@@ -130,7 +149,7 @@ impl Workspace {
         classes: NtoN<String, usize>,
     ) -> Result<&Molecule, WorkspaceError> {
         if let Some(stack) = self.stacks.get_mut(stack_idx) {
-            *stack = Arc::new(Stack::new(layer, classes, stack.clone()));
+            *stack = Arc::new(Stack::new(layer, stack.clone()));
             Ok(stack.read())
         } else {
             Err(WorkspaceError::StackNotFound)
