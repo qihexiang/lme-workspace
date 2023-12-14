@@ -2,8 +2,9 @@ use std::collections::HashSet;
 use std::hash::Hash;
 
 use rayon::prelude::*;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct NtoN<L: Eq + Hash, R: Eq + Hash>(HashSet<(L, R)>);
 
 impl<L: Sync + Send + Eq + Hash + Clone, R: Sync + Send + Eq + Hash + Clone> NtoN<L, R> {
@@ -64,6 +65,12 @@ impl<L: Sync + Send + Eq + Hash + Clone, R: Sync + Send + Eq + Hash + Clone> Nto
         I: IntoIterator<Item = (L, R)>,
     {
         self.data_mut().extend(iter)
+    }
+
+    pub fn overlay_to(&self, other: &Self) -> Self {
+        let mut overlayed = other.clone();
+        overlayed.extend(self.data().clone());
+        overlayed
     }
 }
 
