@@ -67,10 +67,10 @@ impl Workspace {
         patch: &Molecule,
     ) -> Result<(), WorkspaceError> {
         if let Some(stack) = self.stacks.get_mut(stack_idx) {
-            if let Layer::Fill(molecule) = stack.get_layer() {
+            if let Layer::Fill(molecule) = stack.get_top() {
                 let molecule = patch.overlay_to(molecule);
                 let layer = Layer::Fill(molecule);
-                // *stack = Arc::new(Stack::new(layer, stack, base))
+                *stack = Arc::new(Stack::new(layer, stack.clone()))
             } else {
                 *stack = Arc::new(Stack::new(Layer::Fill(patch.clone()), stack.clone()));
             }
@@ -146,7 +146,6 @@ impl Workspace {
         &mut self,
         stack_idx: usize,
         layer: Layer,
-        classes: NtoN<String, usize>,
     ) -> Result<&Molecule, WorkspaceError> {
         if let Some(stack) = self.stacks.get_mut(stack_idx) {
             *stack = Arc::new(Stack::new(layer, stack.clone()));
@@ -164,12 +163,12 @@ pub enum WorkspaceError {
 }
 
 mod test {
-    use std::f64::consts::PI;
-
-    use nalgebra::{Matrix4, Point3, Transform3, Vector3};
-
     #[test]
     fn rotation_around_point() {
+        use std::f64::consts::PI;
+
+        use nalgebra::{Matrix4, Point3, Transform3, Vector3};
+
         let p1 = Point3::new(0., 0., 0.);
         let p2 = Point3::new(0., 0., 1.);
         let rotation = Matrix4::new_rotation_wrt_point(PI / 2. * Vector3::new(1., 0., 0.), p2);

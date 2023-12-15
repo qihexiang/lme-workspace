@@ -6,7 +6,7 @@ use crate::entity::{Layer, Molecule};
 
 #[derive(Debug, Clone)]
 pub struct Stack {
-    current: Layer,
+    top: Layer,
     cache: Molecule,
     base: Option<Arc<Stack>>,
 }
@@ -14,16 +14,16 @@ pub struct Stack {
 impl Stack {
     pub fn new_empty(core_size: usize) -> Self {
         Self {
-            current: Layer::Base(core_size),
+            top: Layer::Base(core_size),
             cache: Molecule::default(),
             base: Option::default(),
         }
     }
 
-    pub fn new(current: Layer, base: Arc<Stack>) -> Self {
-        let cache = current.read(&base.cache);
+    pub fn new(top: Layer, base: Arc<Stack>) -> Self {
+        let cache = top.read(&base.cache);
         Self {
-            current,
+            top,
             cache,
             base: Some(base),
         }
@@ -48,7 +48,7 @@ impl Stack {
         self.base.clone()
     }
 
-    pub fn get_layer(&self) -> &Layer {
-        &self.current
+    pub fn get_top(&self) -> &Layer {
+        &self.top
     }
 }
