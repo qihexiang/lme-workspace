@@ -7,6 +7,7 @@ pub mod entity;
 pub mod stack;
 
 use entity::{Layer, Molecule};
+use serde::Serialize;
 use stack::Stack;
 
 #[derive(Debug, Clone)]
@@ -18,6 +19,14 @@ pub struct Workspace {
 }
 
 impl Workspace {
+    pub fn new(core_size: usize) -> Self {
+        Self {
+            core_size,
+            stacks: vec![Arc::new(Stack::new_empty(core_size))],
+            ids: vec![],
+            classes: NtoN::new(),
+        }
+    }
     pub fn create_stacks_from(
         &mut self,
         stack_idx: usize,
@@ -156,6 +165,7 @@ impl Workspace {
     }
 }
 
+#[derive(Serialize, Clone, Copy)]
 pub enum WorkspaceError {
     StackNotFound,
     NoSuchIdName,
