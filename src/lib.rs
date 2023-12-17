@@ -9,6 +9,7 @@ pub mod stack;
 use entity::{Layer, Molecule};
 use serde::Serialize;
 use stack::Stack;
+use rayon::prelude::*;
 
 #[derive(Debug, Clone)]
 pub struct Workspace {
@@ -75,6 +76,32 @@ impl Workspace {
         }
     }
 
+    pub fn write_to_stacks(
+        &mut self, stack_idxs: &Vec<usize>, patch: &Molecule
+    ) -> Result<(), WorkspaceError> {
+        let currents = stack_idxs.par_iter().copied().map(|stack_idx| self.stacks.get(stack_idx)).collect::<Vec<_>>();
+        if currents.par_iter().all(|item| item.is_some()) {
+            let writtens = currents.into_par_iter().map(|item| item.expect("Checked no None here"))
+                .map(|stack| {
+                    if let Layer::Fill(molecule) = stack.get_top() {
+                        let molecule = patch.overlay_to(molecule);
+                        let layer = Layer::Fill(molecule);
+                        Arc::new(Stack::new(layer, stack.clone()))
+                    } else {
+                        Arc::new(Stack::new(Layer::Fill(patch.clone()), stack.clone()))
+                    }
+                })
+                .collect::<Vec<_>>();
+            let patch = stack_idxs.par_iter().copied().zip(writtens.into_par_iter()).collect::<Vec<_>>();
+            for (stack_idx, updated) in patch {
+                self.stacks[stack_idx] = updated
+            }
+            Ok(())
+        } else {
+            Err(WorkspaceError::StackNotFound)
+        }
+    }
+
     pub fn write_to_stack(
         &mut self,
         stack_idx: usize,
@@ -94,13 +121,33 @@ impl Workspace {
         }
     }
 
-    pub fn overlay_to(
+    pub fn overlay_to_stacks(
+        &mut self, stack_idxs: &Vec<usize>, layer: &Layer
+    ) -> Result<(), WorkspaceError> {
+        let currents = stack_idxs.par_iter().copied().map(|stack_idx| self.stacks.get(stack_idx)).collect::<Vec<_>>();
+        if currents.par_iter().all(|item| item.is_some()) {
+            let writtens = currents.into_par_iter().map(|item| item.expect("Checked not None here"))
+                .map(|stack| {
+                    Arc::new(Stack::new(layer.clone(), stack.clone()))
+                })
+                .collect::<Vec<_>>();
+            let patch = stack_idxs.par_iter().copied().zip(writtens.into_par_iter()).collect::<Vec<_>>();
+            for (stack_idx, updated) in patch {
+                self.stacks[stack_idx] = updated;
+            };
+            Ok(())
+        } else {
+            Err(WorkspaceError::StackNotFound)
+        }
+    }
+
+    pub fn overlay_to_stack(
         &mut self,
         stack_idx: usize,
-        layer: Layer,
+        layer: &Layer,
     ) -> Result<&Molecule, WorkspaceError> {
         if let Some(stack) = self.stacks.get_mut(stack_idx) {
-            *stack = Arc::new(Stack::new(layer, stack.clone()));
+            *stack = Arc::new(Stack::new(layer.clone(), stack.clone()));
             Ok(stack.read())
         } else {
             Err(WorkspaceError::StackNotFound)
