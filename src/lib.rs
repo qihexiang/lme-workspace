@@ -80,6 +80,19 @@ impl Workspace {
         }
     }
 
+    pub fn overlay_to(
+        &mut self,
+        stack_idx: usize,
+        layer: Layer,
+    ) -> Result<&Molecule, WorkspaceError> {
+        if let Some(stack) = self.stacks.get_mut(stack_idx) {
+            *stack = Arc::new(Stack::new(layer, stack.clone()));
+            Ok(stack.read())
+        } else {
+            Err(WorkspaceError::StackNotFound)
+        }
+    }
+
     pub fn remove_stack(&mut self, stack_idx: usize) -> Result<Arc<Stack>, WorkspaceError> {
         if let Ok(stack) = self.read_stack(stack_idx) {
             self.stacks.remove(stack_idx);
@@ -140,19 +153,6 @@ impl Workspace {
 
     pub fn remove_atom_from_class(&mut self, atom_idx: usize) {
         self.classes.remove_right(&atom_idx)
-    }
-
-    pub fn overlay_to(
-        &mut self,
-        stack_idx: usize,
-        layer: Layer,
-    ) -> Result<&Molecule, WorkspaceError> {
-        if let Some(stack) = self.stacks.get_mut(stack_idx) {
-            *stack = Arc::new(Stack::new(layer, stack.clone()));
-            Ok(stack.read())
-        } else {
-            Err(WorkspaceError::StackNotFound)
-        }
     }
 }
 
