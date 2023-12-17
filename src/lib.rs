@@ -27,6 +27,11 @@ impl Workspace {
             classes: NtoN::new(),
         }
     }
+
+    pub fn exist_stack(&self, stack_idx: usize) -> bool {
+        self.stacks.len() > stack_idx
+    }
+
     pub fn create_stacks_from(
         &mut self,
         stack_idx: usize,
@@ -165,7 +170,7 @@ impl Workspace {
     }
 }
 
-#[derive(Serialize, Clone, Copy)]
+#[derive(Serialize, Debug, Clone, Copy)]
 pub enum WorkspaceError {
     StackNotFound,
     NoSuchIdName,
