@@ -10,6 +10,7 @@ use entity::{Layer, Molecule};
 use serde::Serialize;
 use stack::Stack;
 use rayon::prelude::*;
+pub use nalgebra;
 
 #[derive(Debug, Clone)]
 pub struct Workspace {
