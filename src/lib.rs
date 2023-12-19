@@ -7,10 +7,10 @@ pub mod entity;
 pub mod stack;
 
 use entity::{Layer, Molecule};
+pub use nalgebra;
+use rayon::prelude::*;
 use serde::Serialize;
 use stack::Stack;
-use rayon::prelude::*;
-pub use nalgebra;
 
 #[derive(Debug, Clone)]
 pub struct Workspace {
@@ -82,11 +82,19 @@ impl Workspace {
     }
 
     pub fn write_to_stacks(
-        &mut self, stack_idxs: &Vec<usize>, patch: &Molecule
+        &mut self,
+        stack_idxs: &Vec<usize>,
+        patch: &Molecule,
     ) -> Result<(), WorkspaceError> {
-        let currents = stack_idxs.par_iter().copied().map(|stack_idx| self.stacks.get(stack_idx)).collect::<Vec<_>>();
+        let currents = stack_idxs
+            .par_iter()
+            .copied()
+            .map(|stack_idx| self.stacks.get(stack_idx))
+            .collect::<Vec<_>>();
         if currents.par_iter().all(|item| item.is_some()) {
-            let writtens = currents.into_par_iter().map(|item| item.expect("Checked no None here"))
+            let writtens = currents
+                .into_par_iter()
+                .map(|item| item.expect("Checked no None here"))
                 .map(|stack| {
                     if let Layer::Fill(molecule) = stack.get_top() {
                         let molecule = patch.overlay_to(molecule);
@@ -97,7 +105,11 @@ impl Workspace {
                     }
                 })
                 .collect::<Vec<_>>();
-            let patch = stack_idxs.par_iter().copied().zip(writtens.into_par_iter()).collect::<Vec<_>>();
+            let patch = stack_idxs
+                .par_iter()
+                .copied()
+                .zip(writtens.into_par_iter())
+                .collect::<Vec<_>>();
             for (stack_idx, updated) in patch {
                 self.stacks[stack_idx] = updated
             }
@@ -127,19 +139,29 @@ impl Workspace {
     }
 
     pub fn overlay_to_stacks(
-        &mut self, stack_idxs: &Vec<usize>, layer: &Layer
+        &mut self,
+        stack_idxs: &Vec<usize>,
+        layer: &Layer,
     ) -> Result<(), WorkspaceError> {
-        let currents = stack_idxs.par_iter().copied().map(|stack_idx| self.stacks.get(stack_idx)).collect::<Vec<_>>();
+        let currents = stack_idxs
+            .par_iter()
+            .copied()
+            .map(|stack_idx| self.stacks.get(stack_idx))
+            .collect::<Vec<_>>();
         if currents.par_iter().all(|item| item.is_some()) {
-            let writtens = currents.into_par_iter().map(|item| item.expect("Checked not None here"))
-                .map(|stack| {
-                    Arc::new(Stack::new(layer.clone(), stack.clone()))
-                })
+            let writtens = currents
+                .into_par_iter()
+                .map(|item| item.expect("Checked not None here"))
+                .map(|stack| Arc::new(Stack::new(layer.clone(), stack.clone())))
                 .collect::<Vec<_>>();
-            let patch = stack_idxs.par_iter().copied().zip(writtens.into_par_iter()).collect::<Vec<_>>();
+            let patch = stack_idxs
+                .par_iter()
+                .copied()
+                .zip(writtens.into_par_iter())
+                .collect::<Vec<_>>();
             for (stack_idx, updated) in patch {
                 self.stacks[stack_idx] = updated;
-            };
+            }
             Ok(())
         } else {
             Err(WorkspaceError::StackNotFound)
@@ -213,11 +235,20 @@ impl Workspace {
         self.classes.extend(iter)
     }
 
+    pub fn unset_class_name<I>(&mut self, iter: I)
+    where
+        I: IntoIterator<Item = (String, usize)>,
+    {
+        for (class_name, atom_idx) in iter {
+            self.classes.remove(&class_name, &atom_idx);
+        }
+    }
+
     pub fn remove_class(&mut self, class_name: &String) {
         self.classes.remove_left(class_name)
     }
 
-    pub fn remove_atom_from_class(&mut self, atom_idx: usize) {
+    pub fn remove_atom_classes(&mut self, atom_idx: usize) {
         self.classes.remove_right(&atom_idx)
     }
 }
