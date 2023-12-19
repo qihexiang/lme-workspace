@@ -69,6 +69,10 @@ impl Workspace {
         }
     }
 
+    pub fn get_classes(&self) -> &NtoN<String, usize> {
+        &self.classes
+    }
+
     pub fn read_stack(&self, stack_idx: usize) -> Result<Arc<Stack>, WorkspaceError> {
         if let Some(stack) = self.stacks.get(stack_idx) {
             Ok(stack.clone())
