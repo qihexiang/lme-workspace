@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use n_to_n::NtoN;
+pub use n_to_n::NtoN;
 
 pub mod config;
 pub mod entity;
