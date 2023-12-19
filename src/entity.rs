@@ -100,6 +100,12 @@ impl Atoms {
     }
 }
 
+impl From<HashMap<usize, Option<Atom>>> for Atoms {
+    fn from(value: HashMap<usize, Option<Atom>>) -> Self {
+        Self(value)
+    }
+}
+
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub struct Bonds(UnGraphMap<usize, Option<f64>>);
 
@@ -178,8 +184,8 @@ fn merge_bonds() {
 
 #[derive(Debug, Deserialize, Serialize, Clone, Default)]
 pub struct Molecule {
-    atoms: Atoms,
-    bonds: Bonds,
+    pub atoms: Atoms,
+    pub bonds: Bonds,
     pub classes: NtoN<String, usize>,
 }
 
@@ -225,7 +231,9 @@ impl Layer {
                 let mut molecule = Molecule::default();
                 let placeholders = (0..*size).map(|idx| (idx, None)).collect::<Vec<_>>();
                 molecule.atoms.set(&placeholders);
-                molecule.classes.extend((0..*size).map(|idx| (String::from("core"), idx)));
+                molecule
+                    .classes
+                    .extend((0..*size).map(|idx| (String::from("core"), idx)));
                 molecule
             }
             Self::Fill(current) => current.overlay_to(lower),
