@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Default, Deserialize, Serialize, Hash, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
+#[derive(
+    Debug, Default, Deserialize, Serialize, Hash, PartialEq, Eq, PartialOrd, Ord, Clone, Copy,
+)]
 pub struct Pair<T>(T, T);
 
 impl<T> Pair<T> {
@@ -37,41 +39,48 @@ impl<T: PartialEq> Pair<T> {
 }
 
 mod test {
-    use std::collections::{HashMap, HashSet};
-
-    use crate::Pair;
-
     #[test]
     fn ordered_pair() {
-        assert_eq!(
-            Pair::new_ordered(1, 2), Pair::new_ordered(2, 1)
-        );
+        use crate::Pair;
+        assert_eq!(Pair::new_ordered(1, 2), Pair::new_ordered(2, 1));
     }
 
     #[test]
     fn pair_as_hash_key() {
+        use crate::Pair;
+        use std::collections::HashMap;
+
         assert_eq!(
             HashMap::from([
                 (Pair::new_ordered(1, 2), 1),
                 (Pair::new_ordered(2, 1), 2),
                 (Pair::new_ordered(3, 4), 3)
             ]),
-            HashMap::from([
-                (Pair::new_ordered(1, 2), 2),
-                (Pair::new_ordered(3, 4), 3)
-            ])
+            HashMap::from([(Pair::new_ordered(1, 2), 2), (Pair::new_ordered(3, 4), 3)])
         )
     }
 
     #[test]
     fn pair_get_another_order() {
+        use crate::Pair;
+        use std::collections::HashSet;
+
         let pairs = HashSet::from([
-            Pair::new_ordered(1, 2), Pair::new_ordered(2, 1),
-            Pair::new_ordered(1, 3), Pair::new_ordered(3, 2)
+            Pair::new_ordered(1, 2),
+            Pair::new_ordered(2, 1),
+            Pair::new_ordered(1, 3),
+            Pair::new_ordered(3, 2),
         ]);
 
         for i in 1..=3 {
-            assert_eq!(pairs.iter().filter(|pair| pair.contains(&i)).collect::<Vec<_>>().len(), 2);
+            assert_eq!(
+                pairs
+                    .iter()
+                    .filter(|pair| pair.contains(&i))
+                    .collect::<Vec<_>>()
+                    .len(),
+                2
+            );
         }
     }
 }
