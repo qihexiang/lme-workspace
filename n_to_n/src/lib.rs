@@ -4,7 +4,7 @@ use std::hash::Hash;
 use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct NtoN<L: Eq + Hash, R: Eq + Hash>(HashSet<(L, R)>);
 
 impl<L: Sync + Send + Eq + Hash + Clone, R: Sync + Send + Eq + Hash + Clone> NtoN<L, R> {
